@@ -1,14 +1,15 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
 const server = require("http").Server(app);
-const io = require("socket.io")(server, {
-  cors: {
-    origin: "https://chat-test-task-fron.herokuapp.com",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["my-custom-header"],
-    credentials: true,
-  },
-});
+const io = require("socket.io")(server, { cors: { origins: "*" } });
+
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "https://chat-test-task-fron.herokuapp.com",
+  ],
+};
 
 // const corsOpts = {
 //   origin: "*",
@@ -20,11 +21,12 @@ const io = require("socket.io")(server, {
 
 // app.use(cors(corsOpts));
 app.use(express.json());
+app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 
 const rooms = new Map();
 
-app.get("/rooms/:id", (req, res) => {
+app.get("/rooms/:id", cors(corsOptions), (req, res) => {
   const { id: roomId } = req.params;
   const obj = rooms.has(roomId)
     ? {
@@ -36,7 +38,7 @@ app.get("/rooms/:id", (req, res) => {
   res.json(obj);
 });
 
-app.post("/rooms", (req, res) => {
+app.post("/rooms", cors(corsOptions), (req, res) => {
   const { roomId, userName } = req.body;
   if (!rooms.has(roomId)) {
     rooms.set(
